@@ -1,0 +1,158 @@
+; import { createAsyncThunk } from "@reduxjs/toolkit";
+; import axios from "axios";
+
+; // פעולה אסינכרונית לכניסת משתמש
+; export const loginUser = createAsyncThunk(
+;   "user/loginUser", // שם ייחודי לפעולה
+;   async (user, thunkAPI) => {
+;     try {
+;       const response = await axios.post("/logIN", user);
+;       return response.data; // מחזיר את הנתונים שקיבלנו מהשרת
+;     } catch (error) {
+;       return thunkAPI.rejectWithValue(error.response?.data || "שגיאה בכניסה");
+;     }
+;   }
+; );
+; הסבר שורה-שורה:
+; createAsyncThunk:
+
+; משמש ליצירת פעולה אסינכרונית.
+; Redux Toolkit מנהלת עבורך את המצבים של pending, fulfilled, ו-rejected.
+; "user/loginUser":
+
+; שם ייחודי לפעולה. חשוב כדי להבדיל בין פעולות אחרות.
+; async (user, thunkAPI):
+
+; פונקציה שמבצעת את הבקשה. מקבלת את נתוני המשתמש (user) ומאפשרת להשתמש בפונקציות נוספות דרך thunkAPI.
+; axios.post("/logIN", user):
+
+; שולח את בקשת ה-POST עם פרטי המשתמש לשרת.
+; thunkAPI.rejectWithValue:
+
+; מטפל בשגיאות ומחזיר את הודעת השגיאה למצב ה-Redux.
+; שלב 2: עדכון ה-slice ושימוש ב-extraReducers
+; נוסיף את הטיפול בפעולה בתוך ה-slice באמצעות extraReducers.
+
+; javascript
+; Copy code
+; import { createSlice } from "@reduxjs/toolkit";
+; import { loginUser } from "../services/userServices";
+
+; const initialState = {
+;   user: null, // נתוני המשתמש
+;   isConected: false, // האם המשתמש מחובר
+;   isLoading: false, // מצב טעינה
+;   error: null, // שגיאה מהשרת
+; };
+
+; export const userSlice = createSlice({
+;   name: "userDetails",
+;   initialState,
+;   reducers: {
+;     logout: (state) => {
+;       state.isConected = false;
+;       state.user = null;
+;       state.error = null;
+;     },
+;   },
+;   extraReducers: (builder) => {
+;     builder
+;       .addCase(loginUser.pending, (state) => {
+;         state.isLoading = true; // התחלת הבקשה
+;         state.error = null;
+;       })
+;       .addCase(loginUser.fulfilled, (state, action) => {
+;         state.isLoading = false; // הבקשה הושלמה
+;         state.isConected = true; // המשתמש מחובר
+;         state.user = action.payload; // נתוני המשתמש מהשרת
+;       })
+;       .addCase(loginUser.rejected, (state, action) => {
+;         state.isLoading = false; // הבקשה נכשלה
+;         state.error = action.payload; // שגיאה מהשרת
+;       });
+;   },
+; });
+
+; // ייצוא פעולת ה-logout
+; export const { logout } = userSlice.actions;
+
+; // ייצוא הרדוסר
+; export default userSlice.reducer;
+; הסבר שורה-שורה:
+; extraReducers: (builder) => {...}:
+
+; הוספת מצבים (pending, fulfilled, rejected) עבור הפעולה loginUser.
+; builder.addCase(loginUser.pending):
+
+; מצב המתאר שהבקשה נמצאת בטעינה (isLoading).
+; builder.addCase(loginUser.fulfilled):
+
+; מצב המתאר שהבקשה הושלמה בהצלחה:
+; המשתמש מחובר (isConected = true).
+; הנתונים נשמרים ב-state.
+; builder.addCase(loginUser.rejected):
+
+; מצב המתאר שהבקשה נכשלה:
+; הטעינה מופסקת.
+; הודעת השגיאה נשמרת ב-state.
+; שלב 3: עדכון ה-Component
+; נעדכן את הקומפוננטה Login כדי להשתמש ב-loginUser.
+
+; javascript
+; Copy code
+; import React, { useState } from "react";
+; import { useDispatch, useSelector } from "react-redux";
+; import { loginUser } from "../services/userServices";
+; import { useNavigate } from "react-router-dom";
+
+; export default function Login() {
+;   const dispatch = useDispatch();
+;   const navigate = useNavigate();
+;   const [userName, setUserName] = useState("");
+;   const [userPassword, setUserPassword] = useState("");
+;   const { isLoading, error } = useSelector((state) => state.userDetails);
+
+;   const handleSubmit = async (e) => {
+;     e.preventDefault();
+;     if (!userName || !userPassword) {
+;       alert("שדות אלו הם חובה");
+;       return;
+;     }
+
+;     const newUser = {
+;       name: userName,
+;       password: userPassword,
+;     };
+
+;     // קריאה לפעולה האסינכרונית
+;     dispatch(loginUser(newUser)).then((result) => {
+;       if (result.meta.requestStatus === "fulfilled") {
+;         navigate("/kk");
+;       }
+;     });
+;   };
+
+;   return (
+;     <div className="container">
+;       <form onSubmit={handleSubmit}>
+;         <input
+;           type="text"
+;           placeholder="שם משתמש"
+;           value={userName}
+;           onChange={(e) => setUserName(e.target.value)}
+;         />
+;         <input
+;           type="password"
+;           placeholder="סיסמה"
+;           value={userPassword}
+;           onChange={(e) => setUserPassword(e.target.value)}
+;         />
+;         {isLoading && <p>טוען...</p>}
+;         {error && <p style={{ color: "red" }}>{error}</p>}
+;         <button type="submit" disabled={isLoading}>
+;           התחבר
+;         </button>
+;       </form>
+;     </div>
+;   );
+; }

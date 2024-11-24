@@ -1,0 +1,77 @@
+/* התאמה לכל המסך */
+html, body {
+    height: 100%;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    font-family: Arial, sans-serif;
+    direction: rtl;
+    box-sizing: border-box; /* חשוב כדי למנוע בעיות רווח */
+}
+
+/* מיכל ראשי */
+.container {
+    display: flex;
+    flex-direction: row-reverse; /* מוודא שהטופס בצד ימין */
+    height: 100vh;
+    width: 100vw;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+}
+
+/* מיכל הטופס */
+.form-container {
+    width: 35vw; /* הטופס תופס 35% מרוחב המסך */
+    max-width: 500px; /* מגבלת רוחב מקסימלית */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 2rem;
+    background-color: white;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+    z-index: 2;
+    border-left: 1px solid rgba(0, 0, 0, 0.1); /* גבול דק בין הטופס לתמונה */
+}
+
+/* מיכל התמונה */
+.image-container {
+    flex: 1; /* תופס את כל השטח הנותר */
+    display: flex;
+    align-items: flex-start;
+    justify-content: flex-start;
+    overflow: hidden;
+    position: relative;
+}
+
+.image-container img {
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    width: auto;
+    object-fit: cover;
+    margin: 0; /* מסיר כל רווח פנימי */
+    padding: 0;
+}
+
+/* סגנון כללי לכל האלמנטים */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box; /* מבטיח חישובי מידות מדויקים */
+}
+
+/* רספונסיביות */
+@media (max-width: 768px) {
+    .image-container {
+        display: none; /* מסתיר את התמונה במסכים קטנים */
+    }
+
+    .form-container {
+        width: 90%; /* הטופס יהיה רחב יותר במסכים קטנים */
+        height: auto;
+    }
+}
